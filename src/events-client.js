@@ -1,6 +1,5 @@
 const AWS = require("aws-sdk");
 const jsondiffpatch = require("jsondiffpatch").create();
-const v8n = require("v8n");
 
 class Client {
   constructor({
