@@ -15,7 +15,7 @@ class Client {
 
   async send(detailType, events) {
     if (this.isDynamoDB(events)) {
-      events = this.parseDynamoDB(events)
+      events = this.unmarshallDynamoDBEvent(events)
     }
 
     events = Array.isArray(events) ? events : [events];
@@ -46,7 +46,7 @@ class Client {
     return event.Records && event.Records[0].eventSource === "aws:dynamodb";
   }
 
-  parseDynamoDB(event) {
+  unmarshallDynamoDBEvent(event) {
     return event.Records.map(p => {      
       const oldImage = AWS.DynamoDB.Converter.unmarshall(p.dynamodb.OldImage);
       const newImage = AWS.DynamoDB.Converter.unmarshall(p.dynamodb.NewImage);
