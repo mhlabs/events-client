@@ -15,7 +15,6 @@ class Client {
 
   async send(detailType, events) {
     if (this.isDynamoDB(events)) {
-      console.log("PARSING DDB")
       events = this.parseDynamoDB(events)
     }
 
