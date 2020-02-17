@@ -1,5 +1,7 @@
 ## @mhlabs/events-client
 
+_This is still under development and should not be used in production code_
+
 A thin client for Amazon EventBridge that has as purpose to enforce a message pattern convention following this contract:
 
 ```
