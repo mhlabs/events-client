@@ -107,6 +107,4 @@ class Client {
   }
 }
 
-module.exports = {
-  Client
-};
+exports.Client = Client;

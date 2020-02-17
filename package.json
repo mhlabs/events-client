@@ -1,6 +1,6 @@
 {
   "name": "@mhlabs/events-client",
-  "version": "1.0.0",
+  "version": "0.0.4",
   "description": "Thin client for Amazon EventBridge with support for a metadata/data message pattern",
   "main": "index.js",
   "scripts": {

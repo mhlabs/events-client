@@ -1,4 +1,7 @@
 const AWS = require("aws-sdk");
+const events = require("../src/events-client");
+
+
 let eventBridgeClient = new AWS.EventBridge();
 const promiseMock = jest.fn();
 var eventBridgePromise = {
@@ -19,8 +22,6 @@ eventBridgeClient = {
     return eventBridgePromise;
   }
 };
-
-const events = require("../src/events-client");
 
 beforeEach(() => {
   eventBridgeMock.mockReset();

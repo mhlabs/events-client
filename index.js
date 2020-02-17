@@ -1,4 +1,1 @@
-const client = require("./src/events-client");
-exports.module = {
-    client
-}
+exports.client = require("./src/events-client");
