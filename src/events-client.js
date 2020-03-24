@@ -12,9 +12,22 @@ class Client {
     this.eventBridgeClient = eventBridgeClient;
   }
 
+  prepare(detailType, event) {
+    if (!this.isEvent(event)) {
+      event = { data: event, metadata: {} };
+    }
+    this.jsonDiff(event);
+    return {
+      Source: this.source,
+      DetailType: detailType,
+      Detail: JSON.stringify(event),
+      EventBusName: this.busName
+    };
+  }
+
   async send(detailType, events) {
     if (this.isDynamoDB(events)) {
-      events = this.unmarshallDynamoDBEvent(events)
+      events = this.unmarshallDynamoDBEvent(events);
     }
 
     events = Array.isArray(events) ? events : [events];
@@ -22,16 +35,7 @@ class Client {
 
     const eventList = { Entries: [] };
     for (let event of events) {
-      if (!this.isEvent(event)) {
-        event = { data: event, metadata: {} };
-      }
-      this.jsonDiff(event);
-      eventList.Entries.push({
-        Source: this.source,
-        DetailType: detailType,
-        Detail: JSON.stringify(event),
-        EventBusName: this.busName
-      });
+      eventList.Entries.push(this.prepare(detailType, event));
     }
 
     const result = await this.eventBridgeClient.putEvents(eventList).promise();
@@ -46,7 +50,7 @@ class Client {
   }
 
   unmarshallDynamoDBEvent(event) {
-    return event.Records.map(p => {      
+    return event.Records.map(p => {
       const oldImage = AWS.DynamoDB.Converter.unmarshall(p.dynamodb.OldImage);
       const newImage = AWS.DynamoDB.Converter.unmarshall(p.dynamodb.NewImage);
       return { old: oldImage, new: newImage };
@@ -58,8 +62,7 @@ class Client {
     if (validationResult.length > 0) {
       throw `Cannot be null: ${validationResult}`;
     }
-
-    if (events < 1 || events > 10) {
+    if (events.length < 1 || events.length > 10) {
       throw `Event smust be between between 1 and 10 inclusive. Got ${events.length}`;
     }
   }
@@ -88,20 +91,29 @@ class Client {
   }
 
   isNullOrEmpty(obj) {
-    return !obj || Object.keys(obj).length === 0
+    return !obj || Object.keys(obj).length === 0;
   }
 
   jsonDiff(event) {
-    if (!this.isNullOrEmpty(event.data.new) && !this.isNullOrEmpty(event.data.old)) {
+    if (
+      !this.isNullOrEmpty(event.data.new) &&
+      !this.isNullOrEmpty(event.data.old)
+    ) {
       event.metadata.diff = jsondiffpatch.diff(event.data.old, event.data.new);
       event.metadata.action = "update";
     }
 
-    if (!this.isNullOrEmpty(event.data.new) && this.isNullOrEmpty(event.data.old)) {
+    if (
+      !this.isNullOrEmpty(event.data.new) &&
+      this.isNullOrEmpty(event.data.old)
+    ) {
       event.metadata.action = "create";
     }
 
-    if (this.isNullOrEmpty(event.data.new) && !this.isNullOrEmpty(event.data.old)) {
+    if (
+      this.isNullOrEmpty(event.data.new) &&
+      !this.isNullOrEmpty(event.data.old)
+    ) {
       event.metadata.action = "delete";
     }
   }

@@ -1,7 +1,6 @@
 const AWS = require("aws-sdk");
 const events = require("../src/events-client");
 
-
 let eventBridgeClient = new AWS.EventBridge();
 const promiseMock = jest.fn();
 var eventBridgePromise = {
@@ -160,12 +159,14 @@ test("Events with new/old get a diff in metadata", async () => {
     source: "test"
   });
 
-  const testEvent = { data: { old: { a: 1 }, new: { a: 2 } }, metadata: {} };
+  const testEvent = {
+    data: { old: { a: 1 }, new: { a: 2, b: { x: "abc" } } },
+    metadata: {}
+  };
   client.send("test", testEvent);
-
   const request = eventBridgeMock.mock.calls[0][0];
   const detail = JSON.parse(request.Entries[0].Detail);
-
+  console.log(detail.metadata.diff);
   expect(detail.metadata.diff).toBeTruthy();
 });
 
@@ -178,7 +179,11 @@ test("Events with new/old get a diff and action in metadata", async () => {
     source: "test"
   });
 
-  const testEvent = { data: { old: { a: 1 }, new: { a: 2 } }, metadata: {} };
+  const testEvent = {
+    data: { old: { a: 1, b: { c: 1 } }, new: { a: 2, b: { c: 2, d: 12 } } },
+    metadata: {}
+  };
+
   client.send("test", testEvent);
 
   const request = eventBridgeMock.mock.calls[0][0];
@@ -247,7 +252,3 @@ test("Parse dynamodb event", async () => {
   expect(updated.metadata.action).toBe("update");
   expect(deleted.metadata.action).toBe("delete");
 });
-
-
-
-
