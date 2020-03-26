@@ -1,8 +1,11 @@
 const AWS = require("aws-sdk");
 const events = require("../src/events-client");
+const faker = require("faker");
 
 let eventBridgeClient = new AWS.EventBridge();
+let s3Client = new AWS.EventBridge();
 const promiseMock = jest.fn();
+const s3PromiseMock = jest.fn();
 var eventBridgePromise = {
   promise: promiseMock.mockImplementation(request => {
     return new Promise((resolve, reject) => {
@@ -22,6 +25,22 @@ eventBridgeClient = {
   }
 };
 
+var s3Promise = {
+  promise: s3PromiseMock.mockImplementation(request => {
+    return new Promise((resolve, reject) => {
+      const response = {};
+      resolve(response);
+    });
+  })
+};
+const s3Mock = jest.fn();
+s3Client = {
+  putObject: req => {
+    s3Mock(req);
+    return s3Promise;
+  }
+};
+
 beforeEach(() => {
   eventBridgeMock.mockReset();
 });
@@ -31,7 +50,7 @@ test("Initialise with default eventbus", async () => {
     eventBridgeClient: eventBridgeClient,
     source: "test"
   });
-  await client.send("test", { a: 1 });
+  await await client.send("test", { a: 1 });
   const request = eventBridgeMock.mock.calls[0][0];
   expect(request.Entries[0].EventBusName).toBe("default");
   expect(eventBridgeMock.mock.calls.length).toBe(1);
@@ -43,7 +62,7 @@ test("Initialise with custom eventbus", async () => {
     source: "test",
     eventBusName: "testbus"
   });
-  await client.send("test", { a: 1 });
+  await await client.send("test", { a: 1 });
   const request = eventBridgeMock.mock.calls[0][0];
   expect(request.Entries[0].EventBusName).toBe("testbus");
   expect(eventBridgeMock.mock.calls.length).toBe(1);
@@ -78,7 +97,7 @@ test("Initialise with zero events", async () => {
     source: "test"
   });
   await expect(client.send("test", [])).rejects.toEqual(
-    "Event smust be between between 1 and 10 inclusive. Got 0"
+    "Events must be between between 1 and 10 inclusive. Got 0"
   );
 });
 
@@ -88,7 +107,7 @@ test("Initialise with 1 events", async () => {
     eventBusName: "testbus",
     source: "test"
   });
-  client.send("test", { a: 1 });
+  await client.send("test", { a: 1 });
   expect(eventBridgeMock.mock.calls.length).toBe(1);
 });
 
@@ -105,7 +124,7 @@ test("Initialise with 10 events", async () => {
       return { a: i };
     });
 
-  client.send("test", array);
+  await client.send("test", array);
 
   const request = eventBridgeMock.mock.calls[0][0];
   expect(request.Entries.length).toBe(10);
@@ -120,7 +139,7 @@ test("Unwrapped events get wrapped", async () => {
   });
 
   const testEvent = { a: 1 };
-  client.send("test", testEvent);
+  await client.send("test", testEvent);
 
   const request = eventBridgeMock.mock.calls[0][0];
   const detail = JSON.parse(request.Entries[0].Detail);
@@ -138,7 +157,7 @@ test("Wrapped events don't get double-wrapped", async () => {
   });
 
   const testEvent = { data: { a: 1 }, metadata: {} };
-  client.send("test", testEvent);
+  await client.send("test", testEvent);
 
   const request = eventBridgeMock.mock.calls[0][0];
   const detail = JSON.parse(request.Entries[0].Detail);
@@ -163,7 +182,7 @@ test("Events with new/old get a diff in metadata", async () => {
     data: { old: { a: 1 }, new: { a: 2, b: { x: "abc" } } },
     metadata: {}
   };
-  client.send("test", testEvent);
+  await client.send("test", testEvent);
   const request = eventBridgeMock.mock.calls[0][0];
   const detail = JSON.parse(request.Entries[0].Detail);
   console.log(detail.metadata.diff);
@@ -184,7 +203,7 @@ test("Events with new/old get a diff and action in metadata", async () => {
     metadata: {}
   };
 
-  client.send("test", testEvent);
+  await client.send("test", testEvent);
 
   const request = eventBridgeMock.mock.calls[0][0];
   const detail = JSON.parse(request.Entries[0].Detail);
@@ -203,7 +222,7 @@ test("Events with only new get a 'create' action in metadata and no diff", async
   });
 
   const testEvent = { data: { old: null, new: { a: 2 } }, metadata: {} };
-  client.send("test", testEvent);
+  await client.send("test", testEvent);
 
   const request = eventBridgeMock.mock.calls[0][0];
   const detail = JSON.parse(request.Entries[0].Detail);
@@ -222,7 +241,7 @@ test("Events with only old get a 'delete' action in metadata and no diff", async
   });
 
   const testEvent = { data: { old: { a: 1 }, new: null }, metadata: {} };
-  client.send("test", testEvent);
+  await client.send("test", testEvent);
 
   const request = eventBridgeMock.mock.calls[0][0];
   const detail = JSON.parse(request.Entries[0].Detail);
@@ -241,7 +260,7 @@ test("Parse dynamodb event", async () => {
   });
 
   const testEvent = require("./dynamodb");
-  client.send("test", testEvent);
+  await client.send("test", testEvent);
 
   const request = eventBridgeMock.mock.calls[0][0];
   const created = JSON.parse(request.Entries[0].Detail);
@@ -251,4 +270,45 @@ test("Parse dynamodb event", async () => {
   expect(created.metadata.action).toBe("create");
   expect(updated.metadata.action).toBe("update");
   expect(deleted.metadata.action).toBe("delete");
+});
+
+test(">250k is considered large", async () => {
+  const client = new events.Client({
+    eventBridgeClient: eventBridgeClient,
+    s3Client: s3Client,
+    eventBusName: "testbus",
+    source: "test"
+  });
+
+  const testEvent = {
+    Id: 1234,
+    Name: "Item with a large list",
+    BigList: []
+  };
+
+  while (client.lengthInUtf8Bytes(JSON.stringify(testEvent)) <= 250000) {
+    testEvent.BigList.push(faker.helpers.createCard());
+  }
+  expect(client.isToolarge(JSON.stringify(testEvent))).toBe(true);
+});
+
+test("large nodes get replaced with S3 reference", async () => {
+  const client = new events.Client({
+    eventBridgeClient: eventBridgeClient,
+    s3Client: s3Client,
+    eventBusName: "testbus",
+    source: "test"
+  });
+
+  const testEvent = {
+    Id: 1234,
+    Name: "Item with a large list",
+    BigList: []
+  };
+
+  while (client.lengthInUtf8Bytes(JSON.stringify(testEvent)) <= 250000) {
+    testEvent.BigList.push(faker.helpers.createCard());
+  }
+
+  expect(client.isToolarge(JSON.stringify(testEvent))).toBe(true);
 });

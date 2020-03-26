@@ -18,6 +18,9 @@
   "homepage": "https://github.com/mhlabs/events-client#readme",
   "dependencies": {
     "aws-sdk": "^2.617.0",
-    "jsondiffpatch": "^0.4.1"
+    "faker": "^4.1.0",
+    "jsondiffpatch": "^0.4.1",
+    "jsonpath": "^1.0.2",
+    "uuid": "^7.0.2"
   }
 }
