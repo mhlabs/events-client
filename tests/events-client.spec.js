@@ -207,7 +207,7 @@ test("Events with new/old get a diff and action in metadata", async () => {
 
   const request = eventBridgeMock.mock.calls[0][0];
   const detail = JSON.parse(request.Entries[0].Detail);
-
+  console.log(JSON.stringify(detail));
   expect(detail.metadata.diff).toBeTruthy();
   expect(detail.metadata.action).toBe("update");
 });
@@ -272,6 +272,27 @@ test("Parse dynamodb event", async () => {
   expect(deleted.metadata.action).toBe("delete");
 });
 
+test("Parse dynamodb with large item", async () => {
+  // This is only asserting that the metadata is applied. Not testing if jsondiffpatch works as it should
+
+  const client = new events.Client({
+    eventBridgeClient: eventBridgeClient,
+    eventBusName: "testbus",
+    source: "test"
+  });
+
+  const testEvent = require("./dynamodb");
+  await client.send("test", testEvent, ["$.Message"]);
+  const request = eventBridgeMock.mock.calls[0][0];
+  const created = JSON.parse(request.Entries[0].Detail);
+  const updated = JSON.parse(request.Entries[1].Detail);
+  const deleted = JSON.parse(request.Entries[2].Detail);
+
+  expect(created.metadata.action).toBe("create");
+  expect(updated.metadata.action).toBe("update");
+  expect(deleted.metadata.action).toBe("delete");
+});
+
 test(">250k is considered large", async () => {
   const client = new events.Client({
     eventBridgeClient: eventBridgeClient,
@@ -301,14 +322,26 @@ test("large nodes get replaced with S3 reference", async () => {
   });
 
   const testEvent = {
-    Id: 1234,
-    Name: "Item with a large list",
-    BigList: []
+    data: {
+      old: {
+        Id: 1234,
+        Name: "Item with a large list",
+        BigList: []
+      },
+      new: {
+        Id: 1234,
+        Name: "Item with a large list",
+        BigList: []
+      }
+    }
   };
 
-  while (client.lengthInUtf8Bytes(JSON.stringify(testEvent)) <= 250000) {
-    testEvent.BigList.push(faker.helpers.createCard());
+  while (client.lengthInUtf8Bytes(JSON.stringify(testEvent)) <= 125000) {
+    testEvent.data.old.BigList.push(faker.helpers.createCard());
+    testEvent.data.new.BigList.push(faker.helpers.createCard());
   }
+  //  console.log(testEvent);
 
-  expect(client.isToolarge(JSON.stringify(testEvent))).toBe(true);
+  await client.handleLargeNodes("test", testEvent, ["$.data.new.BigList"]);
+  console.log(testEvent);
 });
