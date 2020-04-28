@@ -21,12 +21,12 @@ class Client {
     if (!this.isEvent(event)) {
       event = { data: event, metadata: {} };
     }
+    this.jsonDiff(event);
     if (largeNodes) {
       // && this.isToolarge(event)) {
       await this.handleLargeNodes(detailType, event, largeNodes);
       event.metadata.largeNodes = largeNodes;
     }
-    this.jsonDiff(event);
     return {
       Source: this.source,
       DetailType: detailType,
