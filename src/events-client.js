@@ -80,10 +80,11 @@ class Client {
     try {
       const result = await this.eventBridgeClient
         .putEvents(eventList)
-        .promise();
+        .promise();      
       return {
         FailedCount: result.FailedEntryCount,
-        FailedReasons: result.Entries.filter(e => !e.EventId)
+        FailedReasons: result.Entries.filter(e => !e.EventId),
+        Events: events
       };
     } catch (err) {
       console.log(JSON.stringify(eventList, null, 2));
