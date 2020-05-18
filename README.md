@@ -1,4 +1,5 @@
 ## @mhlabs/events-client
+![Node.js CI](https://github.com/mhlabs/events-client/workflows/Node.js%20CI/badge.svg)
 
 _This is still under development and should not be used in production code_
 
