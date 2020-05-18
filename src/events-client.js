@@ -21,12 +21,12 @@ class Client {
     if (!this.isEvent(event)) {
       event = { data: event, metadata: {} };
     }
+    this.jsonDiff(event);
     if (largeNodes) {
       // && this.isToolarge(event)) {
       await this.handleLargeNodes(detailType, event, largeNodes);
       event.metadata.largeNodes = largeNodes;
     }
-    this.jsonDiff(event);
     return {
       Source: this.source,
       DetailType: detailType,
@@ -80,10 +80,11 @@ class Client {
     try {
       const result = await this.eventBridgeClient
         .putEvents(eventList)
-        .promise();
+        .promise();      
       return {
         FailedCount: result.FailedEntryCount,
-        FailedReasons: result.Entries.filter(e => !e.EventId)
+        FailedReasons: result.Entries.filter(e => !e.EventId),
+        Events: events
       };
     } catch (err) {
       console.log(JSON.stringify(eventList, null, 2));
