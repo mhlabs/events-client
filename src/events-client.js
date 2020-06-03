@@ -9,7 +9,7 @@ class Client {
     eventBridgeClient = new AWS.EventBridge(),
     eventBusName = "default",
     source = process.env.StackName,
-    s3Client = new AWS.S3()
+    s3Client = new AWS.S3(),
   }) {
     this.busName = eventBusName;
     this.source = source || process.env.StackName;
@@ -31,7 +31,7 @@ class Client {
       Source: this.source,
       DetailType: detailType,
       Detail: JSON.stringify(event),
-      EventBusName: this.busName
+      EventBusName: this.busName,
     };
   }
 
@@ -80,17 +80,16 @@ class Client {
     try {
       const result = await this.eventBridgeClient
         .putEvents(eventList)
-        .promise();      
+        .promise();
       return {
         FailedCount: result.FailedEntryCount,
-        FailedReasons: result.Entries.filter(e => !e.EventId),
-        Events: events
+        FailedReasons: result.Entries.filter((e) => !e.EventId),
+        Events: events,
       };
     } catch (err) {
       console.log(JSON.stringify(eventList, null, 2));
       throw err;
     }
-
   }
 
   isDynamoDB(event) {
@@ -98,7 +97,7 @@ class Client {
   }
 
   unmarshallDynamoDBEvent(event) {
-    return event.Records.map(p => {
+    return event.Records.map((p) => {
       const oldImage = AWS.DynamoDB.Converter.unmarshall(p.dynamodb.OldImage);
       const newImage = AWS.DynamoDB.Converter.unmarshall(p.dynamodb.NewImage);
       return { old: oldImage, new: newImage };
@@ -120,10 +119,10 @@ class Client {
       { detailType },
       { entries },
       { source: this.source },
-      { busName: this.busName }
+      { busName: this.busName },
     ]
-      .filter(p => !p[Object.keys(p)[0]])
-      .map(p => Object.keys(p)[0]);
+      .filter((p) => !p[Object.keys(p)[0]])
+      .map((p) => Object.keys(p)[0]);
   }
 
   isEvent(obj) {
@@ -142,12 +141,30 @@ class Client {
     return !obj || Object.keys(obj).length === 0;
   }
 
+  pathDiff(obj, path) {
+    if (!obj) {
+      return null;
+    }
+    path = path || "$";
+    //console.log(path);
+    let item = [];
+    Object.keys(obj).forEach((key) => {
+      if (typeof obj[key] === "object" && !Array.isArray(obj[key])) {
+        item.push(...this.pathDiff(obj[key], `${path}.${key}`));
+      } else {
+        item.push(`${path}.${key}`);
+      }
+    });
+    return item;
+  }
+
   jsonDiff(event) {
     if (
       !this.isNullOrEmpty(event.data.new) &&
       !this.isNullOrEmpty(event.data.old)
     ) {
       event.metadata.diff = jsondiffpatch.diff(event.data.old, event.data.new);
+      event.metadata.pathDiff = this.pathDiff(event.metadata.diff);
       event.metadata.action = "update";
     }
 
