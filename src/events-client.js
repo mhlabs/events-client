@@ -21,9 +21,14 @@ class Client {
     if (!this.isEvent(event)) {
       event = { data: event, metadata: {} };
     }
+
+    if (event.data && event.data.new && event.data.new._correlation_id) {
+      event.metadata.correlationId = event.data.new._correlation_id;
+      delete event.data.new._correlation_id;
+    }
+
     this.jsonDiff(event);
     if (largeNodes) {
-      // && this.isToolarge(event)) {
       await this.handleLargeNodes(detailType, event, largeNodes);
       event.metadata.largeNodes = largeNodes;
     }

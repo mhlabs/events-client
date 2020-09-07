@@ -375,3 +375,61 @@ test("large nodes get replaced with S3 reference", async () => {
   await client.handleLargeNodes("test", testEvent, ["$.data.new.BigList"]);
   console.log(testEvent);
 });
+
+test("large should be stripped from pathDiff", async () => {
+  const client = new events.Client({
+    eventBridgeClient: eventBridgeClient,
+    s3Client: s3Client,
+    eventBusName: "testbus",
+    source: "test",
+  });
+
+  const testEvent = {
+    old: {
+      Id: 1234,
+      Name: "Item with a large node",
+      LargeItem: {
+        A: 123,
+        B: "1234",
+      },
+    },
+    new: {
+      Id: 1234,
+      Name: "Item with a large node",
+      LargeItem: {
+        A: 123,
+        B: "12345",
+        C: "12345",
+      }
+    },
+  };
+
+  const response = await client.send("test", testEvent, [
+    "$.data.new.LargeItem",
+  ]);
+  console.log(response);
+});
+
+
+test("Corretaltion ID should be moved to metadata", async () => {
+  const client = new events.Client({
+    eventBridgeClient: eventBridgeClient,
+    s3Client: s3Client,
+    eventBusName: "testbus",
+    source: "test",
+  });
+
+  const testEvent = require("./dynamodb");
+  
+  const response = await client.send("test", testEvent);
+  const request = eventBridgeMock.mock.calls[0][0];
+  const created = JSON.parse(request.Entries[0].Detail);
+  const updated = JSON.parse(request.Entries[1].Detail);
+  const deleted = JSON.parse(request.Entries[2].Detail);
+  expect(created.data.new._correlation_id).not.toBeTruthy();
+  expect(updated.data.new._correlation_id).not.toBeTruthy();
+  expect(deleted.data.new._correlation_id).not.toBeTruthy();
+  expect(created.metadata.correlationId).toBeTruthy();
+  expect(updated.metadata.correlationId).toBeTruthy();
+  expect(deleted.metadata.correlationId).not.toBeTruthy();
+});

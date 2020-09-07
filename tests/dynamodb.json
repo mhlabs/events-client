@@ -18,6 +18,9 @@
                     },
                     "Id": {
                         "N": "101"
+                    },
+                    "_correlation_id": {
+                        "S": "abc123"
                     }
                 },
                 "SequenceNumber": "111",
@@ -44,6 +47,9 @@
                     },
                     "Id": {
                         "N": "101"
+                    },
+                    "_correlation_id": {
+                        "S": "abc123"
                     }
                 },
                 "OldImage": {
@@ -78,6 +84,9 @@
                     },
                     "Id": {
                         "N": "101"
+                    },
+                    "_correlation_id": {
+                        "S": "abc123"
                     }
                 },
                 "SequenceNumber": "333",
