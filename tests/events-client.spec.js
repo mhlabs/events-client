@@ -217,6 +217,26 @@ test("Events with new/old get a diff and action in metadata", async () => {
   expect(detail.metadata.diff).toBeTruthy();
   expect(detail.metadata.action).toBe("update");
 });
+test("Events with new/old does not get a diff and action in metadata in variable set", async () => {
+
+  const client = new events.Client({
+    eventBridgeClient: eventBridgeClient,
+    eventBusName: "testbus",
+    source: "test",
+  });
+  process.env.SkipDiff = true;
+  const testEvent = {
+    data: { old: { a: 1, b: { c: 1 } }, new: { a: 2, b: { c: 2, d: 12 } } },
+    metadata: {},
+  };
+
+  await client.send("test", testEvent);
+
+  const request = eventBridgeMock.mock.calls[0][0];
+  const detail = JSON.parse(request.Entries[0].Detail);
+  console.log(JSON.stringify(detail));
+  expect(detail.metadata.diff).toBeFalsy();
+});
 
 test("Events with new/old but no diff don't break", async () => {
   // This is only asserting that the metadata is applied. Not testing if jsondiffpatch works as it should
