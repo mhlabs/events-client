@@ -26,6 +26,12 @@ class Client {
       event.metadata.correlationId = event.data.new._correlation_id;
       delete event.data.new._correlation_id;
     }
+    
+    let traceId;
+    if (event.data && event.data.new && event.data.new._xray_trace_id) {
+      traceId = event.data.new._xray_trace_id;
+      delete event.data.new._xray_trace_id;
+    }
 
     this.jsonDiff(event);
     if (largeNodes) {
@@ -37,6 +43,7 @@ class Client {
       DetailType: detailType,
       Detail: JSON.stringify(event),
       EventBusName: this.busName,
+      TraceHeader: traceId
     };
   }
 

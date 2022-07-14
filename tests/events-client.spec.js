@@ -431,7 +431,7 @@ test("large should be stripped from pathDiff", async () => {
 });
 
 
-test("Corretaltion ID should be moved to metadata", async () => {
+test("Correlation ID should be moved to metadata", async () => {
   const client = new events.Client({
     eventBridgeClient: eventBridgeClient,
     s3Client: s3Client,
@@ -440,7 +440,7 @@ test("Corretaltion ID should be moved to metadata", async () => {
   });
 
   const testEvent = require("./dynamodb");
-  
+
   const response = await client.send("test", testEvent);
   const request = eventBridgeMock.mock.calls[0][0];
   const created = JSON.parse(request.Entries[0].Detail);
@@ -452,4 +452,23 @@ test("Corretaltion ID should be moved to metadata", async () => {
   expect(created.metadata.correlationId).toBeTruthy();
   expect(updated.metadata.correlationId).toBeTruthy();
   expect(deleted.metadata.correlationId).not.toBeTruthy();
+});
+
+test("X-Ray trace id should be removed", async () => {
+  const client = new events.Client({
+    eventBridgeClient: eventBridgeClient,
+    s3Client: s3Client,
+    eventBusName: "testbus",
+    source: "test",
+  });
+
+  const testEvent = require("./dynamodb");
+  const response = await client.send("test", testEvent);
+  const request = eventBridgeMock.mock.calls[0][0];
+  const created = JSON.parse(request.Entries[0].Detail);
+  const updated = JSON.parse(request.Entries[1].Detail);
+  const deleted = JSON.parse(request.Entries[2].Detail);
+  expect(created.data.new._xray_trace_id).not.toBeTruthy();
+  expect(updated.data.new._xray_trace_id).not.toBeTruthy();
+  expect(deleted.data.new._xray_trace_id).not.toBeTruthy();
 });

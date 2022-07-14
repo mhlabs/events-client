@@ -1,99 +1,111 @@
 {
-    "Records": [
-        {
-            "eventID": "1",
-            "eventName": "INSERT",
-            "eventVersion": "1.0",
-            "eventSource": "aws:dynamodb",
-            "awsRegion": "us-east-1",
-            "dynamodb": {
-                "Keys": {
-                    "Id": {
-                        "N": "101"
-                    }
-                },
-                "NewImage": {
-                    "Message": {
-                        "S": "New item!"
-                    },
-                    "Id": {
-                        "N": "101"
-                    },
-                    "_correlation_id": {
-                        "S": "abc123"
-                    }
-                },
-                "SequenceNumber": "111",
-                "SizeBytes": 26,
-                "StreamViewType": "NEW_AND_OLD_IMAGES"
-            },
-            "eventSourceARN": "stream-ARN"
+  "Records": [
+    {
+      "eventID": "1",
+      "eventName": "INSERT",
+      "eventVersion": "1.0",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "us-east-1",
+      "dynamodb": {
+        "Keys": {
+          "Id": {
+            "N": "101"
+          }
         },
-        {
-            "eventID": "2",
-            "eventName": "MODIFY",
-            "eventVersion": "1.0",
-            "eventSource": "aws:dynamodb",
-            "awsRegion": "us-east-1",
-            "dynamodb": {
-                "Keys": {
-                    "Id": {
-                        "N": "101"
-                    }
-                },
-                "NewImage": {
-                    "Message": {
-                        "S": "This item has changed"
-                    },
-                    "Id": {
-                        "N": "101"
-                    },
-                    "_correlation_id": {
-                        "S": "abc123"
-                    }
-                },
-                "OldImage": {
-                    "Message": {
-                        "S": "New item!"
-                    },
-                    "Id": {
-                        "N": "101"
-                    }
-                },
-                "SequenceNumber": "222",
-                "SizeBytes": 59,
-                "StreamViewType": "NEW_AND_OLD_IMAGES"
-            },
-            "eventSourceARN": "stream-ARN"
+        "NewImage": {
+          "Message": {
+            "S": "New item!"
+          },
+          "Id": {
+            "N": "101"
+          },
+          "_correlation_id": {
+            "S": "abc123"
+          },
+          "_xray_trace_id": {
+            "S": "abc123"
+          }
         },
-        {
-            "eventID": "3",
-            "eventName": "REMOVE",
-            "eventVersion": "1.0",
-            "eventSource": "aws:dynamodb",
-            "awsRegion": "us-east-1",
-            "dynamodb": {
-                "Keys": {
-                    "Id": {
-                        "N": "101"
-                    }
-                },
-                "OldImage": {
-                    "Message": {
-                        "S": "This item has changed"
-                    },
-                    "Id": {
-                        "N": "101"
-                    },
-                    "_correlation_id": {
-                        "S": "abc123"
-                    }
-                },
-                "SequenceNumber": "333",
-                "SizeBytes": 38,
-                "StreamViewType": "NEW_AND_OLD_IMAGES"
-            },
-            "eventSourceARN": "stream-ARN"
-        }
-    ]
+        "SequenceNumber": "111",
+        "SizeBytes": 26,
+        "StreamViewType": "NEW_AND_OLD_IMAGES"
+      },
+      "eventSourceARN": "stream-ARN"
+    },
+    {
+      "eventID": "2",
+      "eventName": "MODIFY",
+      "eventVersion": "1.0",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "us-east-1",
+      "dynamodb": {
+        "Keys": {
+          "Id": {
+            "N": "101"
+          }
+        },
+        "NewImage": {
+          "Message": {
+            "S": "This item has changed"
+          },
+          "Id": {
+            "N": "101"
+          },
+          "_correlation_id": {
+            "S": "abc123"
+          },
+          "_xray_trace_id": {
+            "S": "abc123"
+          }
+        },
+        "OldImage": {
+          "Message": {
+            "S": "New item!"
+          },
+          "Id": {
+            "N": "101"
+          },
+          "_xray_trace_id": {
+            "S": "abc123"
+          }
+        },
+        "SequenceNumber": "222",
+        "SizeBytes": 59,
+        "StreamViewType": "NEW_AND_OLD_IMAGES"
+      },
+      "eventSourceARN": "stream-ARN"
+    },
+    {
+      "eventID": "3",
+      "eventName": "REMOVE",
+      "eventVersion": "1.0",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "us-east-1",
+      "dynamodb": {
+        "Keys": {
+          "Id": {
+            "N": "101"
+          }
+        },
+        "OldImage": {
+          "Message": {
+            "S": "This item has changed"
+          },
+          "Id": {
+            "N": "101"
+          },
+          "_correlation_id": {
+            "S": "abc123"
+          },
+          "_xray_trace_id": {
+            "S": "abc123"
+          }
+        },
+        "SequenceNumber": "333",
+        "SizeBytes": 38,
+        "StreamViewType": "NEW_AND_OLD_IMAGES"
+      },
+      "eventSourceARN": "stream-ARN"
+    }
+  ]
 }
