@@ -175,10 +175,11 @@ class Client {
       !this.isNullOrEmpty(event.data.new) &&
       !this.isNullOrEmpty(event.data.old)
     ) {
-      if (!process.env.SkipDiff) {
-        event.metadata.diff = jsondiffpatch.diff(event.data.old, event.data.new);
-      }
+      event.metadata.diff = jsondiffpatch.diff(event.data.old, event.data.new);
       event.metadata.pathDiff = this.pathDiff(event.metadata.diff);
+      if (process.env.SkipDiff) {
+        delete event.metadata.diff;
+      }
       event.metadata.action = "update";
     }
 
